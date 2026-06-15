@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surprise for you! 💖</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            font-family: 'Kanit', sans-serif, Arial;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #introScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+            text-align: center;
+        }
+        .gift-emoji {
+            font-size: 100px;
+            animation: bounce 2s infinite;
+            display: block;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-24px); }
+            60% { transform: translateY(-12px); }
+        }
+        #introScreen h2 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+        }
+        #introScreen p {
+            font-size: 16px;
+            color: #ffcccc;
+        }
+
+        #mainContent {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .card-container {
+            position: relative;
+            width: 300px;
+            height: 380px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        .secret-content {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: #fff5f7;
+            padding: 24px;
+            gap: 12px;
+        }
+        .secret-content img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .secret-content h2 {
+            font-size: 20px;
+            color: #d63a5a;
+            font-weight: 600;
+            margin: 0;
+        }
+        .secret-content p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        #scratchCanvas {
+            position: absolute;
+            inset: 0;
+            touch-action: none;
+            z-index: 2;
+            cursor: crosshair;
+            border-radius: 16px;
+        }
+
+        .hint {
+            font-size: 15px;
+            color: #ffcccc;
+            animation: pulse 1.5s infinite;
+            text-align: center;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        #revealMsg {
+            display: none;
+            font-size: 22px;
+            color: #ffcccc;
+            font-weight: 600;
+            text-align: center;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+
+        #confettiCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+<audio id="bgMusic" loop>
+    <source src="t047.mp3" type="audio/mpeg">
+</audio>
+
+<canvas id="confettiCanvas"></canvas>
+
+<div id="introScreen" onclick="startSurprise()">
+    <span class="gift-emoji">🎁</span>
+    <p>แตะที่กล่องเพื่อดูsurpriseนะอ้วน 💝</p>
+</div>
+
+<div id="mainContent">
+    <div class="card-container">
+        <div class="secret-content">
+            <!-- ===== แก้รูปตรงนี้ ===== -->
+            <img src="/Users/chayanunt/Desktop/surprise/IMG_6093.PNG">
+            <!-- ===== แก้ข้อความตรงนี้ ===== -->
+            <h2>พี่ตั้งใจทำให้อ้วนนะครับ 💖</h2>
+            <p>ขอบคุณที่เข้ามาเป็นความน่ารัก<br>ในทุกๆวันนะอ้วนนนน 🐷</p>
+        </div>
+        <canvas id="scratchCanvas"></canvas>
+    </div>
+    <div class="hint" id="hintText">👆 อ้วนลองเอานิ้วถูๆที่การ์ดดูสิ 👆</div>
+    <div id="revealMsg">ขอบคุณอ้วนที่อยู่กับพี่ในทุกๆวันนะครับ 💕</div>
+</div>
+
+<script>
+    function startSurprise() {
+        document.getElementById('bgMusic').play().catch(() => {});
+        document.getElementById('introScreen').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'flex';
+        initScratchCard();
+    }
+
+    function initScratchCard() {
+        const canvas = document.getElementById('scratchCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = canvas.parentElement;
+        const rect = container.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+
+        const W = rect.width  || 300;
+        const H = rect.height || 380;
+
+        canvas.width  = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width  = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.scale(dpr, dpr);
+
+        // ฟอยล์สีทอง
+        const grad = ctx.createLinearGradient(0, 0, W, H);
+        grad.addColorStop(0,   '#C9A84C');
+        grad.addColorStop(0.3, '#F0D060');
+        grad.addColorStop(0.5, '#C9A84C');
+        grad.addColorStop(0.7, '#E8C840');
+        grad.addColorStop(1,   '#B8922A');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        ctx.globalCompositeOperation = 'destination-out';
+
+        let isDrawing = false;
+        let revealed  = false;
+        let checkInterval;
+
+        function getXY(e) {
+            const r   = canvas.getBoundingClientRect();
+            const src = e.touches ? e.touches[0] : e;
+            return {
+                x: src.clientX - r.left,
+                y: src.clientY - r.top
+            };
+        }
+
+        function drawScratch(x, y) {
+            ctx.beginPath();
+            ctx.arc(x, y, 22, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function checkReveal() {
+            if (revealed) return;
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let cleared = 0;
+            for (let i = 3; i < imgData.data.length; i += 4) {
+                if (imgData.data[i] < 128) cleared++;
+            }
+            const pct = cleared / (imgData.data.length / 4);
+            if (pct > 0.6) {
+                revealed = true;
+                clearInterval(checkInterval);
+                revealCard();
+            }
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousedown',  e => { isDrawing = true;  drawScratch(...Object.values(getXY(e))); });
+        canvas.addEventListener('mousemove',  e => { if (!isDrawing) return; drawScratch(...Object.values(getXY(e))); });
+        canvas.addEventListener('mouseup',    () => { isDrawing = false; });
+        canvas.addEventListener('mouseleave', () => { isDrawing = false; });
+
+        // Touch events
+        canvas.addEventListener('touchstart', e => { e.preventDefault(); isDrawing = true;  drawScratch(...Object.values(getXY(e))); }, { passive: false });
+        canvas.addEventListener('touchmove',  e => { e.preventDefault(); if (!isDrawing) return; drawScratch(...Object.values(getXY(e))); }, { passive: false });
+        canvas.addEventListener('touchend',   () => { isDrawing = false; });
+
+        checkInterval = setInterval(checkReveal, 500);
+    }
+
+    function revealCard() {
+        const canvas = document.getElementById('scratchCanvas');
+        const ctx    = canvas.getContext('2d');
+        const W = parseInt(canvas.style.width);
+        const H = parseInt(canvas.style.height);
+        const dpr = window.devicePixelRatio || 1;
+
+        let alpha = 1;
+        function fadeOut() {
+            alpha -= 0.04;
+            if (alpha <= 0) {
+                canvas.style.display = 'none';
+                document.getElementById('hintText').style.display = 'none';
+                document.getElementById('revealMsg').style.display = 'block';
+                launchConfetti();
+                return;
+            }
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const grad = ctx.createLinearGradient(0, 0, W * dpr, H * dpr);
+            grad.addColorStop(0,   `rgba(201,168,76,${alpha})`);
+            grad.addColorStop(0.5, `rgba(240,208,96,${alpha})`);
+            grad.addColorStop(1,   `rgba(184,146,42,${alpha})`);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            requestAnimationFrame(fadeOut);
+        }
+        fadeOut();
+    }
+
+    function launchConfetti() {
+        const cc  = document.getElementById('confettiCanvas');
+        cc.width  = window.innerWidth;
+        cc.height = window.innerHeight;
+        const ctx = cc.getContext('2d');
+
+        const colors = ['#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff','#5f27cd','#00d2d3','#ff9f43'];
+        const pieces = Array.from({ length: 120 }, () => ({
+            x:     Math.random() * cc.width,
+            y:     -10 - Math.random() * 200,
+            r:     5 + Math.random() * 6,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            vx:    (Math.random() - 0.5) * 3,
+            vy:    2 + Math.random() * 4,
+            angle: Math.random() * Math.PI * 2,
+            spin:  (Math.random() - 0.5) * 0.2,
+            shape: Math.random() > 0.5 ? 'rect' : 'circle'
+        }));
+
+        let frame = 0;
+        function draw() {
+            ctx.clearRect(0, 0, cc.width, cc.height);
+            pieces.forEach(p => {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                ctx.fillStyle  = p.color;
+                ctx.globalAlpha = Math.max(0, 1 - frame / 180);
+                if (p.shape === 'rect') {
+                    ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+                p.x     += p.vx;
+                p.y     += p.vy;
+                p.angle += p.spin;
+                p.vy    += 0.05;
+            });
+            frame++;
+            if (frame < 200) requestAnimationFrame(draw);
+            else ctx.clearRect(0, 0, cc.width, cc.height);
+        }
+        draw();
+    }
+</script>
+</body>
+</html>
